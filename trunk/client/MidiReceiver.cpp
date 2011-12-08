@@ -2,7 +2,7 @@
 #include <QtNetwork>
 
 #include "MidiReceiver.h"
-#include "MidiServerThread.h"
+#include "../server/MidiServerThread.h" /* for FRAME_SIZE */
 
 MidiReceiver::MidiReceiver(bool verbose, QObject *parent)
 	: QObject(parent)
