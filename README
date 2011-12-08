@@ -1,0 +1,7 @@
+The 'server' folder contains, of course, the 'server' component.
+To build, run 'qmake' then make. That's it! Just run miditcp.
+
+The 'client' folder contains a couple of test apps (see miditcp.pro, 
+build with qmake CONFIG+=rxtest or CONFIG+=adaptest). More importantly,
+the 'client' folder contains 'miditcp.pri' which you can include in
+your Qt projects to get the client class and pre-built config dialog.
