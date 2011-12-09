@@ -139,6 +139,13 @@
       </widget>
      </item>
      <item>
+      <widget class="QPushButton" name="eraseBtn">
+       <property name="text">
+        <string>Erase Key</string>
+       </property>
+      </widget>
+     </item>
+     <item>
       <spacer name="horizontalSpacer_2">
        <property name="orientation">
         <enum>Qt::Horizontal</enum>

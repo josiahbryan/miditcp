@@ -30,6 +30,7 @@ private slots:
 	void cellActivated(int row, int /*column */);
 	void changeKeyMode(bool);
 	void cellDoubleClicked(int,int);
+	void eraseKey();
 
 private:
 	Ui::MidiInputSettingsDialog *ui;
