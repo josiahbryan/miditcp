@@ -17,7 +17,7 @@
    <item>
     <widget class="QLabel" name="label">
      <property name="text">
-      <string>Note: This functionality depends on the 'miditcp' server program, included in the DViz source directory. Currently, the miditcp program only runs on linux. Make sure it's running if you're having problems with this dialog.</string>
+      <string>Note: This functionality depends on the 'miditcp' server program, in the miditcp/server directory. Currently, the miditcp program only runs on linux. Make sure it's running if you're having problems with this dialog.</string>
      </property>
      <property name="textFormat">
       <enum>Qt::PlainText</enum>
