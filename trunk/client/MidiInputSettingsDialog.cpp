@@ -90,6 +90,9 @@ void MidiInputSettingsDialog::setupUi()
 		// Current value - will be changed on input
 		ui->tableWidget->setItem(row, col++, new QTableWidgetItem("-"));
 		
+		for(int i=0;i<col;i++)
+			ui->tableWidget->item(row,i)->setFlags(Qt::ItemIsSelectable | Qt::ItemIsEnabled);
+		
 		m_actionsByRow << action;
 		row ++;
 		col = 0;
@@ -99,6 +102,7 @@ void MidiInputSettingsDialog::setupUi()
 	connect(ui->tableWidget, SIGNAL(cellClicked(int,int)), this, SLOT(cellActivated(int,int)));
 	connect(ui->tableWidget, SIGNAL(cellDoubleClicked(int,int)), this, SLOT(cellDoubleClicked(int,int)));
 	connect(ui->changeBtn, SIGNAL(toggled(bool)), this, SLOT(changeKeyMode(bool)));
+	connect(ui->eraseBtn, SIGNAL(clicked()), this, SLOT(eraseKey()));
 	
 	ui->tableWidget->resizeColumnsToContents();
 	ui->tableWidget->resizeRowsToContents();
@@ -108,12 +112,13 @@ void MidiInputSettingsDialog::cellActivated(int row, int /*column */)
 {
 	//qDebug() << "MidiInputSettingsDialog::cellActivated: "<<row;
 	m_currentRow = row;
-	ui->changeBtn->setChecked(true);
+	
 }
 
 void MidiInputSettingsDialog::cellDoubleClicked(int row, int /*column */)
 {
 	m_currentRow = row;
+	ui->changeBtn->setChecked(true);
 }
 
 
@@ -130,6 +135,18 @@ void MidiInputSettingsDialog::applyHost()
 void MidiInputSettingsDialog::connectionStatusChanged(bool flag)
 {
 	ui->connectStatusLabel->setText( flag ? "<font color='green'><b>Connected</b></font>" : "<font color='red'><i>Disconnected</i></font>" );
+}
+
+void MidiInputSettingsDialog::eraseKey()
+{
+	// TODO This *SHOULD* work - will test next time I'm at my office with the midi input
+	MidiInputAction *action = m_actionsByRow[m_currentRow];
+	QList<int> keys = m_mappings.keys(action);
+	int key = keys.isEmpty() ? -1 : keys.first();;
+	m_mappings[key] = 0;
+	
+	QTableWidgetItem *item = ui->tableWidget->item(m_currentRow, 2); // 2 is the "current key" column
+	item->setText(tr("%1").arg(-1));
 }
 
 void MidiInputSettingsDialog::midiKeyReceived(int key, int val)
