@@ -32,6 +32,8 @@ MidiInputAdapter::MidiInputAdapter()
 	, m_configMode(false)
 	, m_host("")
 	, m_port(3729)
+	, m_faderMax(127)
+	, m_smoothingValue(10)
 {
 	setupActionList();
 	loadSettings();
@@ -49,13 +51,55 @@ MidiInputAdapter::~MidiInputAdapter()
 	}
 }
 
+int MidiInputAction::smoothValue(int value, int smoothingValue)
+{
+	if(m_valueIndex < 0 ||
+	   m_smoothingValues.size() != smoothingValue)
+	{
+		m_valueTotal = 0;
+		m_valueIndex = 0;
+		m_receivedCount = 0;
+		
+		m_smoothingValues.clear();
+		for(int i=0;i<smoothingValue;i++)
+			m_smoothingValues << 0;
+	}
+	
+	m_valueTotal -= m_smoothingValues[m_valueIndex];
+	m_smoothingValues[m_valueIndex] = value;
+	m_valueTotal += value;
+	
+	m_valueIndex ++;
+	if(m_valueIndex >= smoothingValue)
+		m_valueIndex = 0;
+		
+	int divisor = smoothingValue;
+	if(m_receivedCount < smoothingValue)
+	{
+		m_receivedCount ++;
+		divisor = m_receivedCount;
+	}
+	
+	value = m_valueTotal / divisor;
+	
+	return value;
+}
+
 bool MidiInputAdapter::triggerMappingForKey(int key, int value)
 {
+	if(m_faderMax > 0 && value > m_faderMax)
+		value = m_faderMax;
+		
 	MidiInputAction *action = actionForKey(key);
 	if(action)
 	{
 		if(action->isFader())
+		{
+			if(m_smoothingValue > 0)
+				value = action->smoothValue(value, m_smoothingValue);
+				
 			action->trigger(value);
+		}
 		else
 			if(value == 0) // button release
 				action->trigger(value);

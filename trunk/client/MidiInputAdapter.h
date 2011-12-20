@@ -10,8 +10,8 @@ class MidiInputAction : public QObject
 {
 	//Q_OBJECT
 public:
-	MidiInputAction() {} //QObject *parent=0) : QObject(parent) {};
-	virtual ~MidiInputAction() {} 
+	MidiInputAction() : m_valueIndex(-1) {}
+	virtual ~MidiInputAction() {}
 	
 	// Just return a UUID - makes life easier. Used for mapping persistance across application executions
 	virtual QString id() { return "0000-0000-0000-0000"; }
@@ -24,6 +24,16 @@ public:
 
 	// Reimplement this to do the real work
 	virtual void trigger(int value) { qDebug() << "Hello, World! Value is:"<<value; }
+	
+	// Called by MidiInputAdapter if smoothing enabled on the adapter
+	virtual int smoothValue(int value, int smoothingValue=10);
+	
+protected:
+	// Used to smooth inputs
+	QList<int> m_smoothingValues;
+	int m_valueTotal;
+	int m_valueIndex;
+	int m_receivedCount;
 };
 
 class MidiInputAdapter : public QObject
@@ -47,6 +57,9 @@ public:
 	MidiInputAction *actionForKey(int key);
 	
 	bool isConnected();
+	
+	int faderMax() { return m_faderMax; }
+	int faderSmoothing() { return m_smoothingValue; }
 
 public slots:
 	void setMappings(QHash<int,MidiInputAction*>);
@@ -54,6 +67,12 @@ public slots:
 	
 	// if true, disables mapping executor
 	void setConfigMode(bool);
+	
+	// Sets the limit value for fader errors due to analog glitches in the MIDI console
+	void setFaderMax(int max) { m_faderMax = max; }
+	
+	// Enable (disable with value=0) smoothing for fader inputs
+	void setFaderSmoothing(int value=10) { m_smoothingValue = value; }
 	
 signals:
 	// used mainly to configure and update mappings
@@ -78,6 +97,9 @@ protected:
 	
 	QString m_host;
 	int m_port;
+	
+	int m_faderMax;
+	int m_smoothingValue;
 
 };
 
