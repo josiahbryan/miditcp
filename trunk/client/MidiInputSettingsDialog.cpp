@@ -50,6 +50,9 @@ void MidiInputSettingsDialog::setupUi()
 	connect(ui->hostApplyBtn, SIGNAL(clicked()), this, SLOT(applyHost()));
 	connect(ui->buttonBox, SIGNAL(accepted()), this, SLOT(okClicked()));
 	
+	ui->hostEdit->setText(m_adap->host());
+	ui->portBox->setValue(m_adap->port());
+	
 	connectionStatusChanged( m_adap->isConnected() );
 	
 	// Prime our hash with mappings from the adapter
