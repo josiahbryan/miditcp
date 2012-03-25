@@ -76,7 +76,7 @@ bool MidiReceiver::start(const QString& host, int port)
 	connect(m_socket, SIGNAL(error(QAbstractSocket::SocketError)), this, SIGNAL(socketError(QAbstractSocket::SocketError)));
 	connect(m_socket, SIGNAL(error(QAbstractSocket::SocketError)), this, SLOT(lostConnection(QAbstractSocket::SocketError)));
 	connect(m_socket, SIGNAL(error(QAbstractSocket::SocketError)), this, SLOT(emitError(QAbstractSocket::SocketError)));
-	
+	qDebug() << "MidiReceiver::start(): "<<ipAddress<<":"<<port;
 	m_socket->connectToHost(ipAddress, port);
 	
 	return true;
@@ -85,7 +85,7 @@ bool MidiReceiver::start(const QString& host, int port)
 
 void MidiReceiver::connectionReady()
 {
-	//qDebug() << "Connected";
+	//qDebug() << "MidiReceiver::connectionReady(): Connected";
 	m_connected = true;
 	
 	emit connected();
@@ -101,11 +101,12 @@ void MidiReceiver::lostConnection()
 	if(m_autoReconnect)
 	{
 		if(m_verbose)
-			qDebug() << "MidiReceiver::lostSonnection: Lost server, attempting to reconnect in 1sec";
+			qDebug() << "MidiReceiver::lostSonnection(): Lost server, attempting to reconnect in 1sec";
 		QTimer::singleShot(1000,this,SLOT(reconnect()));
 	}
 	else
 	{
+		//qDebug() << "MidiReceiver::lostSonnection(): Auto-reconnect off, exiting thread";
 		exit();
 	}
 }
@@ -139,7 +140,7 @@ void MidiReceiver::dataReady()
 	if(bytes.size() > 0)
 	{
 		m_dataBlock.append(bytes);
-//		qDebug() << "dataReady(), read bytes:"<<bytes.count()<<", buffer size:"<<m_dataBlock.size();
+		//qDebug() << "MidiReceiver::dataReady(): read bytes:"<<bytes.count()<<", buffer size:"<<m_dataBlock.size();
 		
 		processBlock();
 	}
@@ -160,7 +161,7 @@ void MidiReceiver::processBlock()
 		sscanf(headerData,"%d %d %d\n",&a, &b, &c);
 		
 		if(m_verbose)
-			printf("MidiReceiver: Received MIDI packet: %d %d %d\n",a,b,c);
+			printf("MidiReceiver::processBlock(): Received MIDI packet: %d %d %d\n",a,b,c);
 		
 		emit midiFrameReady(a,b,c);
 	}

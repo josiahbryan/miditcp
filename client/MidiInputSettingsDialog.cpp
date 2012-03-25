@@ -47,9 +47,7 @@ MidiInputSettingsDialog::~MidiInputSettingsDialog()
 
 void MidiInputSettingsDialog::setupUi()
 {
-	ui->tableWidget->setSelectionBehavior(QAbstractItemView::SelectRows);
-	//ui->tableWidget->setSelectionMode(QAbstractItemView::SingleSelection);
-	
+	connect(ui->hostApplyBtn, SIGNAL(clicked()), this, SLOT(applyHost()));
 	connect(ui->buttonBox, SIGNAL(accepted()), this, SLOT(okClicked()));
 	
 	connectionStatusChanged( m_adap->isConnected() );
@@ -64,19 +62,8 @@ void MidiInputSettingsDialog::setupUi()
 	int row = 0;
 	int col = 0;
 	
-// 	QTableWidgetItem *prototype = new QTableWidgetItem();
-// 	// setup your prototype
-// 	prototype->setFlags(Qt::ItemIsSelectable|Qt::ItemIsEnabled);
-	
 	foreach(MidiInputAction *action, actions)
 	{
-//		qDebug() << "MidiIputSettingsDialog: row:"<<row<<", action:"<<action->name();
-			
-// 		QTableWidgetItem *item = prototype->clone();
-// 		item->setText(action->name());
-		
-		//ui->tableWidget->setItem(row, col++, item);
-		
 		// Action Name
 		ui->tableWidget->setItem(row, col++, new QTableWidgetItem(action->name()));
 		
@@ -98,12 +85,14 @@ void MidiInputSettingsDialog::setupUi()
 		col = 0;
 	}
 	
-	connect(ui->tableWidget, SIGNAL(cellActivated(int,int)), this, SLOT(cellActivated(int,int)));
-	connect(ui->tableWidget, SIGNAL(cellClicked(int,int)), this, SLOT(cellActivated(int,int)));
+	connect(ui->tableWidget, SIGNAL(cellActivated(int,int)),     this, SLOT(cellActivated(int,int)));
+	connect(ui->tableWidget, SIGNAL(cellClicked(int,int)),       this, SLOT(cellActivated(int,int)));
 	connect(ui->tableWidget, SIGNAL(cellDoubleClicked(int,int)), this, SLOT(cellDoubleClicked(int,int)));
-	connect(ui->changeBtn, SIGNAL(toggled(bool)), this, SLOT(changeKeyMode(bool)));
-	connect(ui->eraseBtn, SIGNAL(clicked()), this, SLOT(eraseKey()));
+	connect(ui->changeBtn,   SIGNAL(toggled(bool)),              this, SLOT(changeKeyMode(bool)));
+	connect(ui->eraseBtn,    SIGNAL(clicked()),                  this, SLOT(eraseKey()));
 	
+	//ui->tableWidget->setSelectionMode(QAbstractItemView::SingleSelection);
+	ui->tableWidget->setSelectionBehavior(QAbstractItemView::SelectRows);
 	ui->tableWidget->resizeColumnsToContents();
 	ui->tableWidget->resizeRowsToContents();
 }
@@ -111,8 +100,7 @@ void MidiInputSettingsDialog::setupUi()
 void MidiInputSettingsDialog::cellActivated(int row, int /*column */)
 {
 	//qDebug() << "MidiInputSettingsDialog::cellActivated: "<<row;
-	m_currentRow = row;
-	
+	m_currentRow = row;	
 }
 
 void MidiInputSettingsDialog::cellDoubleClicked(int row, int /*column */)
@@ -139,7 +127,6 @@ void MidiInputSettingsDialog::connectionStatusChanged(bool flag)
 
 void MidiInputSettingsDialog::eraseKey()
 {
-	// TODO This *SHOULD* work - will test next time I'm at my office with the midi input
 	MidiInputAction *action = m_actionsByRow[m_currentRow];
 	QList<int> keys = m_mappings.keys(action);
 	int key = keys.isEmpty() ? -1 : keys.first();;
