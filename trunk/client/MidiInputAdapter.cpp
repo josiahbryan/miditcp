@@ -33,7 +33,7 @@ MidiInputAdapter::MidiInputAdapter()
 	, m_host("")
 	, m_port(3729)
 	, m_faderMax(127)
-	, m_smoothingValue(10)
+	, m_smoothingValue(0)
 {
 	setupActionList();
 	loadSettings();
@@ -88,8 +88,10 @@ int MidiInputAction::smoothValue(int value, int smoothingValue)
 bool MidiInputAdapter::triggerMappingForKey(int key, int value)
 {
 	if(m_faderMax > 0 && value > m_faderMax)
-		value = m_faderMax;
-		
+		return false;
+		//value = m_faderMax;
+	
+	qDebug() << "MidiInputAdapter::triggerMappingForKey: value:"<<value<<", m_faderMax:"<<m_faderMax;
 	MidiInputAction *action = actionForKey(key);
 	if(action)
 	{

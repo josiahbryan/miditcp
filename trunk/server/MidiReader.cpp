@@ -28,17 +28,44 @@ MidiReader::~MidiReader()
 
 void MidiReader::run()
 {
-	m_file.setFileName(m_device);
-	if(!m_file.open(QIODevice::ReadOnly))
+// 	m_file.setFileName(m_device);
+// 	if(!m_file.open(QIODevice::ReadOnly))
+// 	{
+// 		qDebug() << "MidiReader: Unable to open device "<<m_device;
+// 		return;
+// 	}
+	
+	int file;
+	if ((file = open(qPrintable(m_device),O_RDWR)) < 0)
 	{
-		qDebug() << "MidiReader: Unable to open device "<<m_device;
+		printf("Error openning device file in run()\n");
+		exit(1);
 	}
 	
+	
+	
+	qDebug() << "Opened "<<m_device<<"...";
+	int cnt=0;
 	while(!m_killed)
 	{
-		int bytes = m_file.read((char*)&m_inpacket, sizeof(m_inpacket));
+		cnt++;
+		//qDebug() << "Starting read...";
+		int bytes = read(file, (char*)&m_inpacket, sizeof(m_inpacket));
+		//if(bytes > 0)
+		//	qDebug() << "Read "<<bytes<<" bytes";
 		
-		if(m_inpacket[0] == SEQ_MIDIPUTC)
+// 		bool flag = m_file.waitForReadyRead(-1);
+// 		qDebug() << (++cnt)<<"flag: "<<flag<<m_file.errorString();
+// 		
+// 		if(!m_file.errorString().isEmpty())
+// 			return;
+		
+// 		int bytes = m_file.read((char*)&m_inpacket, sizeof(m_inpacket));
+// 		if(bytes > 0)
+// 			qDebug() << "Read "<<bytes<<" bytes";
+// 		
+		/*qDebug() << "pkt: "<<(int)m_inpacket[0] << (int)m_inpacket[1] << (int)m_inpacket[2]; 
+ 		if(m_inpacket[0] == SEQ_MIDIPUTC)
 		{
 			unsigned char val = m_inpacket[1]; 
 			if(val != m_lastPak)
@@ -54,16 +81,16 @@ void MidiReader::run()
 				
 				m_finalPak[m_readCount] = val;
 				
-				//printf("MidiReader: [DEBUG] Read: %d, readCount: %d (last: %d)\n", m_inpacket[1], m_readCount, m_lastPak);
+				printf("MidiReader: [DEBUG] Read: %d, readCount: %d (last: %d)\n", m_inpacket[1], m_readCount, m_lastPak);
 				m_readCount ++;
-				
-				if(m_readCount == 3)
+		*/		
+				if(bytes == 3)
 				{
-					int a = (int)m_finalPak[0],
-					b = (int)m_finalPak[1],
-					c = (int)m_finalPak[2];
+					int a = (int)m_inpacket[0],
+					   b = (int)m_inpacket[1],
+					   c = (int)m_inpacket[2];
 					
-					//printf("Read MIDI packet: %d %d %d\n",a,b,c);
+					printf("Read MIDI packet: %d %d %d\n",a,b,c);
 						
 					emit midiFrameReady(a,b,c);
 						
@@ -71,9 +98,9 @@ void MidiReader::run()
 					//msleep(33);
 				}
 				
-				m_lastPak = val;
-			}
-		}
+// 				m_lastPak = val;
+// 			}
+// 		}
 		
 		if(bytes <= 0)
 		{
@@ -84,6 +111,6 @@ void MidiReader::run()
 	
 	}
 	
-	m_file.close();
+// 	m_file.close();
 	
 }

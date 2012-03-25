@@ -7,7 +7,8 @@ int main(int argc, char *argv[])
 {
 	QCoreApplication app(argc,argv);
 	
-	MidiReader reader;
+	MidiReader reader("/dev/snd/midi1");
+	//MidiReader reader("/dev/snd/midiC0D0");
 	reader.start();
 	
 	qDebug() << "Started MIDI Reader Thread.";
