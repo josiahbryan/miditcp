@@ -13,6 +13,9 @@ MidiReceiver::MidiReceiver(bool verbose, QObject *parent)
 	, m_verbose(verbose)
 	, m_autoReconnect(true)
 {
+	connect(&m_connectTimer, SIGNAL(timeout()), this, SLOT(connectTimeout()));
+	m_connectTimer.setInterval(1000);
+	m_connectTimer.setSingleShot(true);
 }
 
 MidiReceiver::~MidiReceiver()
@@ -28,6 +31,9 @@ MidiReceiver::~MidiReceiver()
 
 bool MidiReceiver::start(const QString& host, int port)
 {
+	if(m_connectTimer.isActive())
+		m_connectTimer.stop();
+	
 	QString ipAddress = host;
 	
 	// find out which IP to connect to
@@ -76,8 +82,10 @@ bool MidiReceiver::start(const QString& host, int port)
 	connect(m_socket, SIGNAL(error(QAbstractSocket::SocketError)), this, SIGNAL(socketError(QAbstractSocket::SocketError)));
 	connect(m_socket, SIGNAL(error(QAbstractSocket::SocketError)), this, SLOT(lostConnection(QAbstractSocket::SocketError)));
 	connect(m_socket, SIGNAL(error(QAbstractSocket::SocketError)), this, SLOT(emitError(QAbstractSocket::SocketError)));
-	qDebug() << "MidiReceiver::start(): "<<ipAddress<<":"<<port;
+	//qDebug() << "MidiReceiver::start(): "<<ipAddress<<":"<<port;
 	m_socket->connectToHost(ipAddress, port);
+	
+	m_connectTimer.start();
 	
 	return true;
 }
@@ -85,6 +93,9 @@ bool MidiReceiver::start(const QString& host, int port)
 
 void MidiReceiver::connectionReady()
 {
+	if(m_connectTimer.isActive())
+		m_connectTimer.stop();
+	
 	//qDebug() << "MidiReceiver::connectionReady(): Connected";
 	m_connected = true;
 	
@@ -93,8 +104,31 @@ void MidiReceiver::connectionReady()
 }
 
 
+void MidiReceiver::connectTimeout()
+{
+	m_connected = false;
+	emit connectionStatusChanged(false);
+	
+	if(m_autoReconnect)
+	{
+		if(m_verbose)
+			qDebug() << "MidiReceiver::connectTimeout: Connect call timed out, attempting reconnect.";
+		
+		reconnect();
+	}
+	else
+	{
+// 		if(m_verbose)
+// 			qDebug() << "MidiReceiver::connectTimeout: Connect call timed out, exiting receiver thread.";
+		exit();
+	}
+}
+
 void MidiReceiver::lostConnection()
 {
+	if(m_connectTimer.isActive())
+		m_connectTimer.stop();
+	
 	m_connected = false;
 	emit connectionStatusChanged(false);
 	
