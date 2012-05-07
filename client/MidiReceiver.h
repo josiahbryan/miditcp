@@ -3,6 +3,7 @@
 
 #include <QDialog>
 #include <QTcpSocket>
+#include <QTimer>
 
 class QTcpSocket;
 
@@ -36,6 +37,7 @@ private slots:
 	void lostConnection(QAbstractSocket::SocketError);
 	void reconnect();
 	void connectionReady();
+	void connectTimeout();
 
 	void emitError(QAbstractSocket::SocketError socketError);
 
@@ -47,7 +49,7 @@ private:
 	int m_port;
 	bool m_verbose;
 	bool m_autoReconnect;
-
+	QTimer m_connectTimer;
 };
 
 #endif
