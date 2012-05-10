@@ -38,6 +38,7 @@ private slots:
 	void reconnect();
 	void connectionReady();
 	void connectTimeout();
+	void pingServer();
 
 	void emitError(QAbstractSocket::SocketError socketError);
 
@@ -50,6 +51,8 @@ private:
 	bool m_verbose;
 	bool m_autoReconnect;
 	QTimer m_connectTimer;
+	QTimer m_pingTimer;
+	QTimer m_pingDeadTimer;
 };
 
 #endif

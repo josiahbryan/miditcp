@@ -4,6 +4,8 @@
 #include "MidiReceiver.h"
 #include "../server/MidiServerThread.h" /* for FRAME_SIZE */
 
+//#define DEBUG_SOCKET
+
 MidiReceiver::MidiReceiver(bool verbose, QObject *parent)
 	: QObject(parent)
 	, m_socket(0)
@@ -16,6 +18,13 @@ MidiReceiver::MidiReceiver(bool verbose, QObject *parent)
 	connect(&m_connectTimer, SIGNAL(timeout()), this, SLOT(connectTimeout()));
 	m_connectTimer.setInterval(1000);
 	m_connectTimer.setSingleShot(true);
+
+	connect(&m_pingTimer, SIGNAL(timeout()), this, SLOT(pingServer()));
+	m_pingTimer.setInterval(1000);
+	
+	connect(&m_pingDeadTimer, SIGNAL(timeout()), this, SLOT(lostConnection()));
+	m_pingDeadTimer.setInterval(2000);
+	m_pingDeadTimer.setSingleShot(true);
 }
 
 MidiReceiver::~MidiReceiver()
@@ -99,6 +108,8 @@ void MidiReceiver::connectionReady()
 	//qDebug() << "MidiReceiver::connectionReady(): Connected";
 	m_connected = true;
 	
+	m_pingTimer.start();
+	
 	emit connected();
 	emit connectionStatusChanged(m_connected);
 }
@@ -108,6 +119,8 @@ void MidiReceiver::connectTimeout()
 {
 	m_connected = false;
 	emit connectionStatusChanged(false);
+	
+	m_pingTimer.stop();
 	
 	if(m_autoReconnect)
 	{
@@ -131,6 +144,8 @@ void MidiReceiver::lostConnection()
 	
 	m_connected = false;
 	emit connectionStatusChanged(false);
+	
+	m_pingTimer.stop();
 	
 	if(m_autoReconnect)
 	{
@@ -180,6 +195,22 @@ void MidiReceiver::dataReady()
 	}
 }
 
+void MidiReceiver::pingServer()
+{
+	if(!m_connected)
+		return;
+		
+	m_socket->write("ping\n",5);
+	
+	#ifdef DEBUG_SOCKET
+	qDebug() << "MidiReceiver::pingServer(): ping sent";
+	#endif
+	
+	if(!m_pingDeadTimer.isActive())
+		m_pingDeadTimer.start();
+	
+}
+
 void MidiReceiver::processBlock()
 {
 	if(!m_connected)
@@ -194,10 +225,22 @@ void MidiReceiver::processBlock()
 		int a, b, c;
 		sscanf(headerData,"%d %d %d\n",&a, &b, &c);
 		
-		if(m_verbose)
-			printf("MidiReceiver::processBlock(): Received MIDI packet: %d %d %d\n",a,b,c);
-		
-		emit midiFrameReady(a,b,c);
+		if(a == -1 &&
+		   b == 127 &&
+		   c == 255)
+		{
+			#ifdef DEBUG_SOCKET
+			qDebug() << "MidiReceiver::processBlock(): Ping received";
+			#endif
+			m_pingDeadTimer.stop();
+		}
+		else
+		{
+			if(m_verbose)
+				printf("MidiReceiver::processBlock(): Received MIDI packet: %d %d %d\n",a,b,c);
+			
+			emit midiFrameReady(a,b,c);
+		}
 	}
 }
 
