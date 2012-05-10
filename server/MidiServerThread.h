@@ -20,6 +20,7 @@ public:
 
 private slots:
 	void midiFrameReady(int a, int b, int c);
+	void dataReady();
 	
 signals:
 	void error(QTcpSocket::SocketError socketError);

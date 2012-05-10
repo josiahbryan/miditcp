@@ -8,6 +8,7 @@ MidiServerThread::MidiServerThread(int socketDescriptor, MidiServer *parent)
 	, m_socketDescriptor(socketDescriptor)
 {
 	m_socket = new QTcpSocket();
+	connect(m_socket, SIGNAL(readyRead()), this, SLOT(dataReady()));
 	connect(parent, SIGNAL(midiFrameReady(int, int, int)), this, SLOT(midiFrameReady(int,int,int))); 
 }
 
@@ -27,6 +28,17 @@ void MidiServerThread::run()
 	
 	// Run event loop
 	exec();
+}
+
+void MidiServerThread::dataReady()
+{
+	if(!m_isConnected)
+		return;
+	
+	QByteArray bytes = m_socket->readAll();
+	//qDebug() << "MidiServerThread::dataready: Read:"<<bytes;
+	if(bytes.contains("ping\n"))
+		midiFrameReady(-1,127,255);
 }
 
 void MidiServerThread::midiFrameReady(int a, int b, int c)
