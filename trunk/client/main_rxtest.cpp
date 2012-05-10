@@ -6,7 +6,7 @@ int main(int argc, char *argv[])
 {
 	QCoreApplication app(argc,argv);
 	
-	MidiReceiver reader;
+	MidiReceiver reader(true); //true=verbose
 	reader.start("192.168.0.18");
 	
 	qDebug() << "Started MIDI Receiver.";
